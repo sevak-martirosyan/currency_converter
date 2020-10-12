@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple currency converter</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.min.css">
+    <style>
+        .input-field label {
+     color: #ffffff;
+   }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <div class="card-panel teal">
+            <div class="row white-text">
+                <div class="input-field col s4">
+                    <select id="curr_from">
+                        <option value="" disabled selected>Choose a currency</option>
+                    </select>
+                    <label>FROM</label>
+                </div>
+                <div class="input-field col s4">
+                    <select id="curr_to">
+                        <option value="" disabled selected>Choose a currency</option>
+                    </select>
+                    <label>TO</label>
+                </div>
+                <div class="input-field col s4">
+                    <input id="amount" type="text" class="validate">
+                    <label for="amount">Enter amount</label>
+                </div>
+            </div>
+            <div class="row white-text">
+                <div class="col s2 offset-s5">
+                    <a id="convert_button" class="waves-effect waves-light btn">convert</a>
+                </div>
+            </div>
+            <div class="divider"></div>
+            <div class="row white-text">
+                <div class="input-field col s4 offset-s4">
+                    <input disabled value="" id="result" type="text" class="validate">
+                    <label for="disabled">Result</label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $.getJSON( "{% url 'get_currencies' %}", function( data ) {
+            $.each(data, function(key, value) {
+                $("#curr_from").append($("<option></option>").attr("value", value.code).text(value.name));
+                });
+            $.each(data.reverse(), function(key, value) {
+                $("#curr_to").append($("<option></option>").attr("value", value.code).text(value.name));
+                $('select').material_select();
+                });
+
+        });
+    });
+    $(".container").delegate("#convert_button", "click", function() {
+        val = parseFloat($("#amount").val().replace(',', '.'));
+        if(isNaN(val)) {
+            Materialize.toast('Enter a valid float number', 4000);
+        }
+        else if (!$("#curr_to").val() || !$("#curr_from").val()){
+            Materialize.toast('Choose currencies to convert from and to', 4000);
+        }
+        else {
+            $.getJSON("{% url 'get_currencies' %}" + $("#curr_from").val() + "/" + $("#curr_to").val(), function( data ) {
+                    $("#result").val( (val * data["rate"]).toFixed(2) );
+                    Materialize.updateTextFields();
+                });
+            }
+    });
+</script>
+</body>
+</html>
